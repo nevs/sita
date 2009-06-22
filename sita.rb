@@ -42,11 +42,24 @@ module Sita
         case node.name
           when "Constant" then return true
           when "Expression" then return expression_safe?( node )
-          when "ParameterReference" then return false
+          when "ParameterReference" then parameter_safe?( node )
+          when "FunctionCall" then return function_safe?( node )
           else
           puts "Unknown node: #{node.name}"
         end
         false
+      end
+
+      def parameter_safe?( node )
+        false
+      end
+
+      def function_safe?( node )
+        name = node.elements['function_name/text()'].to_s
+        case name
+          when 'quote_ident','quote_literal' then true
+          else false
+        end
       end
 
       def expression_safe?( node )
@@ -56,10 +69,12 @@ module Sita
           when "normal" then
             case name
               when "||"
-                return node_safe?( node.elements['left/*'] ) && node_safe?( node.elements['right/*'] )
+                node_safe?( node.elements['left/*'] ) && node_safe?( node.elements['right/*'] )
             end
+          else
+            puts node
+            false
         end
-        puts node
       end
 
     end
@@ -72,3 +87,4 @@ xml_file = "vuln_sql_injection_direct.xml" || ARGV[0]
 function = Sita::Function.new( xml_file )
 
 Sita::Tests::SQL_Injection.new( function ).run
+

@@ -2,7 +2,9 @@
 CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID AS $$
   BEGIN
     EXECUTE 'SELECT now();';
+    EXECUTE 'SELECT '||quote_ident(stmt);
     EXECUTE 'SELECT ' || stmt || ' FROM information_schema.tables';
+    EXECUTE 'UPDATE tbl SET ' || quote_ident(colname) || ' = ' || quote_literal(newvalue) || ' WHERE key = ' || quote_literal(keyvalue);
     RETURN;
   END;
 $$ LANGUAGE plpgsql;
