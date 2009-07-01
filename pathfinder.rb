@@ -17,7 +17,6 @@ module Sita
     # returns a list of all pathes from node to root
     def self.find( root, node, path = [], &block )
 
-
       # collect previous nodes of the current block and add them to the path
       previous_nodes = node.parent.children
 
@@ -42,6 +41,19 @@ module Sita
             false_path << cur_node.elements['false_body'].children.last || cur_node
             find( root, false_path.last, false_path, &block )
             return
+          when "Case" then
+            cur_node.elements['case_when_list'].children.each do | case_when |
+              cur_path = path.dup
+              cur_path << case_when.elements['statements'].children.last || cur_node
+              find( root, cur_path.last, cur_path, &block )
+            end
+            if cur_node.elements['else_statements']
+              path << cur_node.elements['else_statements'].children.last || cur_node
+            else
+              path << cur_node
+            end
+            find( root, path.last, path, &block )
+            return
           when "Assignment", "ExecuteSQL" then
             # nothing to do here
             path << cur_node
@@ -54,9 +66,14 @@ module Sita
         # finished backtracing
         yield path
       else
-        # backtrace to further
-        path << node.parent.parent
-        find( root, node.parent.parent, path.dup, &block )
+        # backtrace further
+        case node.parent.parent.name
+          when "CaseWhen" then
+            path << node.parent.parent.parent.parent
+          else
+            path << node.parent.parent
+        end
+        find( root, path.last, path.dup, &block )
       end
 
     end

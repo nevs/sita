@@ -4,18 +4,29 @@ CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID A
     var1 text;
     var2 text;
   BEGIN
-    IF true THEN  -- line 5
-      SELECT 6;
-      var1 := quote_ident( stmt );
-      IF false THEN
-        SELECT 9;
+    CASE 
+      WHEN true THEN
+        SELECT 1;
+      WHEN false THEN
+        SELECT 2;
       ELSE
-        SELECT 11;
-      END IF;
-      SELECT 13;
-    ELSE
-      SELECT 15;
-    END IF;
+        SELECT 3;
+    END CASE;
+--    BEGIN
+--      SELECT 2;
+--    END;
+--    IF true THEN  -- line 5
+--      SELECT 6;
+--      var1 := quote_ident( stmt );
+--      IF false THEN
+--        SELECT 9;
+--      ELSE
+--        SELECT 11;
+--      END IF;
+--      SELECT 13;
+--    ELSE
+--      SELECT 15;
+--    END IF;
     EXECUTE 'SELECT ' || var2 || ' FROM information_schema.tables';
 --    -- EXECUTE 'UPDATE tbl SET ' || quote_ident(colname) || ' = ' || quote_literal(newvalue) || ' WHERE key = ' || quote_literal(keyvalue);
     RETURN;
