@@ -1,13 +1,28 @@
 
 CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID AS $$
   DECLARE
-    var1 text;
+    var1 text := NULL;
     var2 text;
-    fors RECORD;
+    fors text;
   BEGIN
-    FOR fors IN EXECUTE 'SELECT person_id FROM person' LOOP
-      SELECT i.person_id;
+    FOR fors IN SELECT person_id FROM person LOOP
+      -- SELECT fors;
     END LOOP;
+    IF true THEN
+      var1 := stmt;
+    ELSE
+      var1 := quote_ident( stmt );
+    END IF;
+    EXECUTE 'SELECT ' || fors || ' FROM information_schema.tables';
+    RETURN;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION test_simple( stmt text ) RETURNS VOID AS $$
+  BEGIN
+--    FOR fors IN EXECUTE 'SELECT person_id FROM person' LOOP
+--      SELECT i.person_id;
+--    END LOOP;
 --    FOR fors IN SELECT person_id FROM person LOOP
 --      SELECT i.person_id;
 --    END LOOP;
@@ -43,14 +58,8 @@ CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID A
 --    ELSE
 --      SELECT 15;
 --    END IF;
-    EXECUTE 'SELECT ' || var2 || ' FROM information_schema.tables';
+--    EXECUTE 'SELECT ' || var2 || ' FROM information_schema.tables';
 --    -- EXECUTE 'UPDATE tbl SET ' || quote_ident(colname) || ' = ' || quote_literal(newvalue) || ' WHERE key = ' || quote_literal(keyvalue);
-    RETURN;
-  END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION test_simple( stmt text ) RETURNS VOID AS $$
-  BEGIN
     SELECT pg_catalog.version();
     SELECT pg_catalog.version(stmt,found,3);
 
