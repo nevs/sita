@@ -29,7 +29,7 @@ module Sita
       previous_nodes.reverse_each do | cur_node |
         #puts "Cur_node: #{cur_node.inspect}"
         case cur_node.name
-          when "Block" then
+          when "Block", "DynamicForS", "ForC", "ForI", "ForS", "Loop", "While" then
             path << cur_node.elements['body'].children.last || cur_node
             find( root, path.last, path, &block )
             return
@@ -54,7 +54,7 @@ module Sita
             end
             find( root, path.last, path, &block )
             return
-          when "Assignment", "ExecuteSQL" then
+          when "Assignment","Close","DynamicExecute","ExecuteSQL","Exit","Fetch","GetDiagnostics","Open","Perform","Raise","Return","ReturnNext","ReturnQuery" then
             # nothing to do here
             path << cur_node
           else

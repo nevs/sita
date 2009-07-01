@@ -3,15 +3,31 @@ CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID A
   DECLARE
     var1 text;
     var2 text;
+    fors RECORD;
   BEGIN
-    CASE 
-      WHEN true THEN
-        SELECT 1;
-      WHEN false THEN
-        SELECT 2;
-      ELSE
-        SELECT 3;
-    END CASE;
+    FOR fors IN EXECUTE 'SELECT person_id FROM person' LOOP
+      SELECT i.person_id;
+    END LOOP;
+--    FOR fors IN SELECT person_id FROM person LOOP
+--      SELECT i.person_id;
+--    END LOOP;
+--    FOR i IN 1..10 LOOP
+--      SELECT i;
+--    END LOOP;
+--    WHILE true LOOP
+--      SELECT 1;
+--    END LOOP;
+--    LOOP
+--      SELECT 1;
+--    END LOOP;
+--    CASE 
+--      WHEN true THEN
+--        SELECT 1;
+--      WHEN false THEN
+--        SELECT 2;
+--      ELSE
+--        SELECT 3;
+--    END CASE;
 --    BEGIN
 --      SELECT 2;
 --    END;
