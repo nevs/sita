@@ -30,12 +30,16 @@ module Sita
       previous_nodes.reverse_each do | cur_node |
         #puts "Cur_node: #{cur_node.inspect}"
         case cur_node.name
+          when "Block" then
+            path << cur_node.elements['body'].children.last || cur_node
+            find( root, path.last, path, &block )
+            return
           when "If" then
             true_path = path.dup
-            true_path << cur_node.elements['true_body'].children.last
+            true_path << cur_node.elements['true_body'].children.last || cur_node
             find( root, true_path.last, true_path, &block )
             false_path = path.dup
-            false_path << cur_node.elements['false_body'].children.last
+            false_path << cur_node.elements['false_body'].children.last || cur_node
             find( root, false_path.last, false_path, &block )
             return
           when "Assignment", "ExecuteSQL" then
