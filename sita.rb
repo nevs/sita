@@ -33,14 +33,28 @@ module Sita
       
       def run
         safe = true
-        function.xml.each_element('//DynamicExecute') do | dyn_exec |
+        function.xml.each_element('//DynamicExecute|//DynamicForS') do | context |
 
-          if not plpgsql_expression_safe?( dyn_exec, dyn_exec.elements['query/Expression'])
+          if not plpgsql_expression_safe?( context, context.elements['query/Expression'])
             safe = false
-            puts "Problem found in #{dyn_exec.inspect}"
+            puts "Problem found in #{context.inspect}"
           end
 
         end
+
+        function.xml.each_element('//ReturnQuery') do | context |
+          # ReturnQuery may have a static query or a dynamic one
+          # we only need to check dynamic queries
+          if context.elements['dynquery']
+
+            if not plpgsql_expression_safe?( context, context.elements['dynquery/Expression'])
+              safe = false
+              puts "Problem found in #{context.inspect}"
+            end
+
+          end
+        end
+
         if safe
           puts "Function #{function.name} is safe."
         else
@@ -74,11 +88,16 @@ module Sita
       def plpgsql_parameter_safe?( context, parameter )
         puts "plpgsql_parameter_safe?: #{parameter.inspect}" if DEBUG
 
+        if parameter.name != "Variable"
+          raise "Tracking #{parameter.name} not supported."
+        end
+
         # check datatype of parameter
         case parameter.attribute('datatype').to_s
-          when 'integer'
-            # this datatypes are always considered safe since they cannot include compromising values
+          when 'integer','boolean'
+            # these datatypes are always considered safe since they cannot include compromising values
             return true
+
         end
         
         if parameter.attribute("name").to_s.match(/^\$\d+$/)
@@ -108,18 +127,30 @@ module Sita
                   return true
                 end
               end
-#            when "DynamicExecute" then
-#              # node = dyn_exec.elements['query/Expression/SQLParseTree/sql:SelectStatement/sql:TargetList/sql:ResultTarget/*']
-#              return false
+            when "DynamicExecute","ExecuteSQL" then
+              # check if the results get put in the parameter we are currently checking
+              if node.elements['into']
+                if node.elements["into/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
+                  # this is the parameter we are interested in
+                  return plpgsql_expression_safe?( node, node.elements['query/Expression'])
+                end
+              end
+              return true
             when "DynamicForS", "ForS" then
               if node.elements["row/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
                 # this is the parameter we are interested in
                 return plpgsql_expression_safe?( node, node.elements['query/Expression'])
               end
+            when "Fetch"
+              if node.elements["row/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
+                # this is the parameter we are interested in
+                raise "Implement cursor checking"
+              end
+              return false
             when "Return","ReturnQuery" then
               # path does not reach the offending usage of the parameter
               return true
-            when "Block","Case","Exit","ForI","ForC","If","Loop","Raise","ReturnNext","While" then
+            when "Block","Case","Close","GetDiagnostics","Exit","ForI","ForC","If","Loop","Perform","Raise","ReturnNext","While" then
               # nothing to do for these nodes
             else
               raise "Unknown node in backtrace_parameter: #{node.inspect}"
@@ -138,6 +169,7 @@ module Sita
       end
 
       def plpgsql_expression_safe?( context, expression )
+        puts "plpgsql_expression_safe?: #{expression.inspect}" if DEBUG
         sql_node_safe?( context, expression, expression.elements['SQLParseTree/sql:SelectStatement/sql:TargetList/sql:ResultTarget/*'] )
       end
 

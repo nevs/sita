@@ -3,17 +3,20 @@ CREATE OR REPLACE FUNCTION vuln_sql_injection_direct( stmt text ) RETURNS VOID A
   DECLARE
     var1 text := NULL;
     var2 text;
-    fors text;
+    var3 bool;
+    fors RECORD;
   BEGIN
     FOR fors IN SELECT person_id FROM person LOOP
       -- SELECT fors;
     END LOOP;
+    -- fors := 'safe';
+    SELECT INTO fors unsafe FROM somewhere;
     IF true THEN
       var1 := stmt;
     ELSE
       var1 := quote_ident( stmt );
     END IF;
-    EXECUTE 'SELECT ' || fors || ' FROM information_schema.tables';
+    EXECUTE 'SELECT ' || stmt || ' FROM information_schema.tables';
     RETURN;
   END;
 $$ LANGUAGE plpgsql;

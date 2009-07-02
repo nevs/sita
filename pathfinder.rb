@@ -22,8 +22,6 @@ module Sita
         # remove all nodes after current node
       end
 
-      #puts "previous_nodes: #{previous_nodes.inspect}"
-
       previous_nodes.reverse_each do | cur_node |
         #puts "Cur_node: #{cur_node.inspect}"
         case cur_node.name
