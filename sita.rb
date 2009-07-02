@@ -111,7 +111,7 @@ module Sita
 #            when "DynamicExecute" then
 #              # node = dyn_exec.elements['query/Expression/SQLParseTree/sql:SelectStatement/sql:TargetList/sql:ResultTarget/*']
 #              return false
-            when "ForS" then
+            when "DynamicForS", "ForS" then
               if node.elements["row/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
                 # this is the parameter we are interested in
                 return plpgsql_expression_safe?( node, node.elements['query/Expression'])
