@@ -2,7 +2,7 @@
 PREFIX=/home/sven/diplom/local/
 
 all: xml
-		ruby sita.rb
+		ruby analyze.rb
 
 install_functions: test.sql
 		${PREFIX}bin/psql -t -q < test.sql

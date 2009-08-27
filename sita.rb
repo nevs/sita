@@ -206,9 +206,3 @@ module Sita
   end
 end
 
-xml_file = "vuln_sql_injection_direct.xml" || ARGV[0]
-
-function = Sita::Function.new( xml_file )
-
-Sita::Tests::SQL_Injection.new( function ).run
-
