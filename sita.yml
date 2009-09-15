@@ -1,0 +1,4 @@
+
+# functions producing output which is safe to use in sql statements
+safe_escape_functions: [quote_literal, quote_ident, quote_nullable]
+
