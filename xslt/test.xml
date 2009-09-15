@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<plpgsql_function>
+  <name>vuln_sql_injection_direct</name>
+  <oid>16390</oid>
+  <arguments>
+    <argument position="0" datum="0" oid="25" type="text"/>
+  </arguments>
+  <datums>
+    <VAR>
+      <refname>$1</refname>
+      <datatype>
+      </datatype>
+      <isconst>1</isconst>
+      <notnull>0</notnull>
+      <value>0</value>
+      <isnull>1</isnull>
+      <freeval>0</freeval>
+    </VAR>
+    <VAR>
+      <refname>found</refname>
+      <datatype>
+      </datatype>
+      <isconst>0</isconst>
+      <notnull>0</notnull>
+      <value>0</value>
+      <isnull>1</isnull>
+      <freeval>0</freeval>
+    </VAR>
+  </datums>
+  <action>
+    <BLOCK>
+      <body>
+        <DYNEXECUTE>
+          <query>
+            <EXPR>
+              <query>SELECT   $1 </query>
+              <params>
+                <Param>
+                  <index>0</index>
+                </Param>
+              </params>
+              <sql_parse_tree xmlns="SQL">
+                <SelectStmt>
+                  <targetList>
+                    <List>
+                      <ResTarget>
+                        <name></name>
+                        <val>
+                          <ParamRef>
+                            <number>1</number>
+                          </ParamRef>
+                        </val>
+                      </ResTarget>
+                    </List>
+                  </targetList>
+                </SelectStmt>
+              </sql_parse_tree>
+            </EXPR>
+          </query>
+        </DYNEXECUTE>
+        <RETURN>
+        </RETURN>
+      </body>
+    </BLOCK>
+  </action>
+</plpgsql_function>
+
+
