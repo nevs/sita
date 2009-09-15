@@ -3,6 +3,7 @@
 require 'rexml/document'
 require 'pathfinder'
 require 'test/unit/assertions'
+require 'yaml'
 
 
 module Sita
@@ -10,13 +11,14 @@ module Sita
   DEBUG = false
 
   class Function
-    attr_reader :name, :xml, :datums, :body
+    attr_reader :name, :xml, :datums, :body, :config
 
-    def initialize( xml_file )
-      @xml = REXML::Document.new( File.new( xml_file ), {:ignore_whitespace_nodes=>:all} )
+    def initialize( xml_string )
+      @xml = REXML::Document.new( xml_string, {:ignore_whitespace_nodes=>:all} )
       @name = xml.elements['//Function/@name'].to_s
       @datums = xml.elements['//Function/datums']
       @body = xml.elements['//Function/action/Block']
+      @config = YAML.load_file('sita.yml')
     end
   end
 
@@ -32,12 +34,13 @@ module Sita
       end
       
       def run
+        puts "\nStarting analysis of function #{function.name}\n\n"
         safe = true
         function.xml.each_element('//DynamicExecute|//DynamicForS') do | context |
 
           if not plpgsql_expression_safe?( context, context.elements['query/Expression'])
             safe = false
-            puts "Problem found in #{context.inspect}"
+            puts "SQL injection vulnerability found in #{context.name} on line #{context.attribute('line')}"
           end
 
         end
@@ -49,16 +52,16 @@ module Sita
 
             if not plpgsql_expression_safe?( context, context.elements['dynquery/Expression'])
               safe = false
-              puts "Problem found in #{context.inspect}"
+              puts "SQL injection vulnerability found in #{context.name} on line #{context.attribute('line')}"
             end
 
           end
         end
 
         if safe
-          puts "Function #{function.name} is safe."
+          puts "\nFunction #{function.name} is safe.\n"
         else
-          puts "Function #{function.name} is unsafe."
+          puts "\nFunction #{function.name} is unsafe.\n"
         end
       end
 
@@ -175,10 +178,7 @@ module Sita
 
       def function_safe?( context, node )
         name = node.elements['function_name/text()'].to_s
-        case name
-          when 'quote_ident','quote_literal','quote_nullable' then true
-          else false
-        end
+        function.config['safe_escape_functions'].member?( name )
       end
 
       def sql_expression_safe?( context, expression, node )
@@ -187,12 +187,12 @@ module Sita
         type = node.elements['sql:Operator'].attribute('type').to_s
         case type
           when "normal" then
-            case name
+            case name.gsub(/(&#10;| )+/,'')
               when "||"
                 sql_node_safe?( context, expression, node.elements['left/*'] ) && 
                 sql_node_safe?( context, expression, node.elements['right/*'] )
               else
-                raise "Unhandled expression type"
+                raise "Unhandled expression type: #{name}"
                 false
             end
           else
