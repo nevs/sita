@@ -40,7 +40,7 @@ xml.each_element('//CreateFunctionStmt') do | function |
   
   ast = conn.exec("SELECT dump_plpgsql_function(#{conn.quote("#{func_name.join('.')}(#{arguments.join(',')})")}::regprocedure);")[0][0]
   
-  stdin, stdout, stderr = Open3.popen3("xsltproc ../rama/plpgsql_function.xsl -")
+  stdin, stdout, stderr = Open3.popen3("xsltproc xslt/plpgsql_function.xsl -")
   stdin.write( ast )
   stdin.close
   
