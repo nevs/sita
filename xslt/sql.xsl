@@ -57,7 +57,14 @@
 </xsl:template>
 
 <xsl:template match="sql:A_Const">
-  <sql:Constant><xsl:apply-templates/></sql:Constant>
+  <sql:Constant><xsl:apply-templates select="sql:String|sql:Integer|sql:Null"/></sql:Constant>
+</xsl:template>
+
+<xsl:template match="sql:SubLink">
+  <sql:SubLink>
+    <type><value-of select="sql:subLinkType/text()"/></type>
+    <subselect><xsl:apply-templates select="sql:SelectStatement"/></subselect>
+  </sql:SubLink>
 </xsl:template>
 
 <xsl:template match="sql:A_Expr">
@@ -130,7 +137,7 @@
   <sql:Null></sql:Null>
 </xsl:template>
 
-<xsl:template match="sql:FuncCall/sql:funcname|sql:TypeName/sql:names|sql:A_Expr/sql:operator/sql:name|sql:ColumnRef/sql:fields">
+<xsl:template match="sql:FuncCall/sql:funcname|sql:TypeName/sql:names|sql:A_Expr/sql:name|sql:ColumnRef/sql:fields">
   <xsl:call-template name="list-to-string"/>
 </xsl:template>
 
