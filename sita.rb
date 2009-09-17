@@ -130,7 +130,7 @@ module Sita
                   return true
                 end
               end
-            when "DynamicExecute","ExecuteSQL" then
+            when "DynamicExecute" then
               # check if the results get put in the parameter we are currently checking
               if node.elements['into']
                 if node.elements["into/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
@@ -139,6 +139,13 @@ module Sita
                   # therefore EXECUTE INTO is considered unsafe
                   return false
                   # return plpgsql_expression_safe?( node, node.elements['query/Expression'])
+                end
+              end
+            when "ExecuteSQL" then
+              # check if the results get put in the parameter we are currently checking
+              if node.elements['into']
+                if node.elements["into/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
+                  return plpgsql_expression_safe?( node, node.elements['statement/Expression'])
                 end
               end
             when "DynamicForS", "ForS" then
