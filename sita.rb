@@ -76,7 +76,7 @@ module Sita
           when "Expression" then return sql_expression_safe?( context, expression, node )
           when "ParameterReference" then 
             # resolve local parameter reference
-            dno = expression.elements['parameters/*[#{node.text.to_s}]'].text.to_s
+            dno = expression.elements["parameters/Parameter[#{node.text.to_s}]"].text.to_s
             datum = function.datums.elements["*[@dno = '#{dno}']"]
             return plpgsql_parameter_safe?( context, datum )
           when "FunctionCall" then return function_safe?( context, node )
@@ -135,10 +135,12 @@ module Sita
               if node.elements['into']
                 if node.elements["into/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
                   # this is the parameter we are interested in
-                  return plpgsql_expression_safe?( node, node.elements['query/Expression'])
+                  # XXX we cannot statically analyse the possible result of a dynamic query
+                  # therefore EXECUTE INTO is considered unsafe
+                  return false
+                  # return plpgsql_expression_safe?( node, node.elements['query/Expression'])
                 end
               end
-              return true
             when "DynamicForS", "ForS" then
               if node.elements["row/Row/fields/Field[@dno='#{parameter.attribute('dno')}']"]
                 # this is the parameter we are interested in
@@ -187,7 +189,7 @@ module Sita
         type = node.elements['sql:Operator'].attribute('type').to_s
         case type
           when "normal" then
-            case name.gsub(/(&#10;| )+/,'')
+            case name
               when "||"
                 sql_node_safe?( context, expression, node.elements['left/*'] ) && 
                 sql_node_safe?( context, expression, node.elements['right/*'] )
